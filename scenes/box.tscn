@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://c8qit8bdab86x"]
+
+[ext_resource type="Texture2D" uid="uid://k34gmso32ale" path="res://game_assets/tiles/box_tile.png" id="1_ngy5y"]
+[ext_resource type="Script" path="res://scripts/StaticBody2D.gd" id="2_p53ur"]
+
+[sub_resource type="GDScript" id="GDScript_ty7di"]
+script/source = "extends Node2D
+
+func hit_with_bullet(bullet: Sprite2D):
+	pass  
+ 
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7dnmy"]
+size = Vector2(16, 16)
+
+[node name="box_tile" type="Node2D"]
+script = SubResource("GDScript_ty7di")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("1_ngy5y")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+script = ExtResource("2_p53ur")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("RectangleShape2D_7dnmy")

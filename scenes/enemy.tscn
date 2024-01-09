@@ -1,0 +1,114 @@
+[gd_scene load_steps=21 format=3 uid="uid://cfebyljvu05iu"]
+
+[ext_resource type="Texture2D" uid="uid://dcc72g3ykvcuk" path="res://game_assets/character/animation/walk_down/ch-walk-down1.png" id="1_d7fm3"]
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_t004b"]
+[ext_resource type="Texture2D" uid="uid://cy6ggdeqff8m8" path="res://game_assets/character/animation/walk_down/ch-walk-down2.png" id="2_4h5ta"]
+[ext_resource type="Texture2D" uid="uid://cufgjhwxvemni" path="res://game_assets/character/animation/walk_down/ch-walk-down3.png" id="3_y8r4b"]
+[ext_resource type="Texture2D" uid="uid://dnkf7j6bsrvpb" path="res://game_assets/character/animation/walk_down/ch-walk-down4.png" id="4_hwbcb"]
+[ext_resource type="Texture2D" uid="uid://bpkmsoedl04aq" path="res://game_assets/character/animation/walk_left/ch-walk-left1.png" id="5_vh0ro"]
+[ext_resource type="Texture2D" uid="uid://b241t84p6owc" path="res://game_assets/character/animation/walk_left/ch-walk-left2.png" id="6_pkkhl"]
+[ext_resource type="Texture2D" uid="uid://beeqh6em80ld4" path="res://game_assets/character/animation/walk_left/ch-walk-left3.png" id="7_0upmf"]
+[ext_resource type="Texture2D" uid="uid://dbyb5o4o2xjfv" path="res://game_assets/character/animation/walk_left/ch-walk-left4.png" id="8_1nmhf"]
+[ext_resource type="Texture2D" uid="uid://dj2v8560g8f6i" path="res://game_assets/character/animation/walk_right/ch-walk-right1.png" id="9_lj76t"]
+[ext_resource type="Texture2D" uid="uid://b4tww0ai7m3aj" path="res://game_assets/character/animation/walk_right/ch-walk-right2.png" id="10_85gau"]
+[ext_resource type="Texture2D" uid="uid://ckyx3drf4t1e3" path="res://game_assets/character/animation/walk_right/ch-walk-right3.png" id="11_y0qlk"]
+[ext_resource type="Texture2D" uid="uid://bvxyp5x1180uw" path="res://game_assets/character/animation/walk_right/ch-walk-right4.png" id="12_qab3h"]
+[ext_resource type="Texture2D" uid="uid://daq0qgvnivdut" path="res://game_assets/character/animation/walk_up/ch-walk-up1.png" id="13_lp2ts"]
+[ext_resource type="Texture2D" uid="uid://bj1n32rf1svsk" path="res://game_assets/character/animation/walk_up/ch-walk-up2.png" id="14_r2hrj"]
+[ext_resource type="Texture2D" uid="uid://clwp77idwcbhs" path="res://game_assets/character/animation/walk_up/ch-walk-up3.png" id="15_woin8"]
+[ext_resource type="Texture2D" uid="uid://dg5t0lho8sqpo" path="res://game_assets/character/animation/walk_up/ch-walk-up4.png" id="16_poaod"]
+[ext_resource type="AudioStream" uid="uid://dq6ko7p2sfl5x" path="res://game_assets/hit.mp3" id="18_wr4rj"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_qxcfm"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_d7fm3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_4h5ta")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_y8r4b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_hwbcb")
+}],
+"loop": true,
+"name": &"walk-down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_hwbcb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_vh0ro")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_pkkhl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_0upmf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_1nmhf")
+}],
+"loop": true,
+"name": &"walk-left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_lj76t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_85gau")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_y0qlk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_qab3h")
+}],
+"loop": true,
+"name": &"walk-right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_lp2ts")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_r2hrj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_woin8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_poaod")
+}],
+"loop": true,
+"name": &"walk-up",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uw035"]
+size = Vector2(10, 15)
+
+[node name="Enemy" type="CharacterBody2D"]
+script = ExtResource("1_t004b")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_qxcfm")
+animation = &"walk-left"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_uw035")
+
+[node name="HitSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("18_wr4rj")
+volume_db = 3.5
+max_polyphony = 3
