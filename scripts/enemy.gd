@@ -88,7 +88,7 @@ func _process(delta):
 	else:
 		walk_time += 1
 		move_to_path()
-		position = position.clamp(Vector2.ZERO, SCREEN_SIZE - Vector2(2*TILE_SIZE, 2*TILE_SIZE))
+		position = position.clamp(Vector2(TILE_SIZE / 2, TILE_SIZE / 2), SCREEN_SIZE - Vector2(2*TILE_SIZE, 2*TILE_SIZE))
 
 func _ready():
 	SCREEN_SIZE 	= get_viewport_rect().size
