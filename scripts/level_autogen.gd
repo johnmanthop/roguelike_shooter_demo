@@ -21,7 +21,6 @@ func random_tile_construction() -> Array:
 
 func translate_construct(construct: Array, w_tile_count: int, h_tile_count: int):
 	var root_position = Vector2(randi() % w_tile_count, randi() % h_tile_count)
-	print(root_position)
 	for i in construct.size():
 		construct[i] += root_position
 		construct[i] = construct[i].clamp(Vector2.ZERO, Vector2(w_tile_count - 1, h_tile_count - 1))

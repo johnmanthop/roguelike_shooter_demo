@@ -3,7 +3,8 @@ extends CharacterBody2D
 const TILE_SIZE:	int = 16	
 var speed: 			int = 75
 var SCREEN_SIZE: 	Vector2
-var health:			int = 60
+const MAX_HEALTH:	int = 60
+var health:			int = MAX_HEALTH
 var killed:			bool = false
 
 func is_killed():

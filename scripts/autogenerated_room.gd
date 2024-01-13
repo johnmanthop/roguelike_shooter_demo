@@ -1,9 +1,9 @@
 extends Node2D
 
-var NO_OF_ENEMIES: 		int = 5
-var NO_OF_BOXES: 		int = 5
+var NO_OF_ENEMIES: 		int = 8
+var NO_OF_BOXES: 		int = 20
 var SCREEN_SIZE: 		Vector2
-var TILE_SIZE:			int = 16
+const TILE_SIZE:		int = 16
 var active_enemies: 	Array
 var active_bullets: 	Array
 var bullet_scene:		PackedScene
@@ -21,10 +21,14 @@ func construct_floor_tiles(floor_scene: PackedScene):
 			floor_tile.position = Vector2(j, i) * TILE_SIZE
 			floor_tile.position += half_tile_offset
 			add_child(floor_tile)
-			
+
+func fix_possible_player_trap():
+	for j in level_matrix[0].size(): level_matrix[0][j] = 0
+	for i in level_matrix.size(): level_matrix[i][0] = 0
+	
 func construct_boxes_into_matrix():
 	var level_autogen = LevelAutogen.new()
-	var points = level_autogen.generate_tiles(w_tile_count, h_tile_count, 10)
+	var points = level_autogen.generate_tiles(w_tile_count, h_tile_count, NO_OF_BOXES)
 	for point in points:
 		level_matrix[point.y][point.x] = 1
 
@@ -36,57 +40,47 @@ func construct_boxes_tiles(box_scene: PackedScene):
 				box_tile.position = Vector2(w, h) * TILE_SIZE
 				box_tile.position += half_tile_offset
 				add_child(box_tile)
-					
+
 func construct_enemies(enemy_scene: PackedScene):
-	for i in NO_OF_ENEMIES:
-		var enemy: CharacterBody2D = enemy_scene.instantiate()
-		
+	active_enemies = enemy_ai.init_enemy_bots(NO_OF_ENEMIES, level_matrix)
+	for enemy in active_enemies:
 		add_child(enemy)
-		enemy.position = Vector2((randi() % int(SCREEN_SIZE.x) + 10) + 10, (randi() % int(SCREEN_SIZE.y) + 10) + 10)
-		active_enemies.append(enemy)
-		enemy.speed = 30
-		
-		
+
 func handle_input(v: Vector2):
 	if Input.is_action_just_pressed("space"):
 		var bullet = bullet_scene.instantiate()
 		
 		add_child(bullet)
-		$player.construct_bullet(bullet)
+		$Player.construct_bullet(bullet)
 		bullet.show()
 		
 		active_bullets.append(bullet)
-		
+
 func handle_bullets():
 	for bullet in active_bullets:
 		if bullet.is_erased():
 			active_bullets.erase(bullet)
 			remove_child(bullet)
-	
+
 func handle_enemies():
 	for enemy in active_enemies:
-		if enemy.is_killed():
-			enemy.position = Vector2(500, 500)
-			enemy.hide()
-			active_enemies.erase(enemy)
-		elif enemy.is_bullet_ready():
+		enemy_ai.handle_bot(enemy, $Player.position)
+		
+		if enemy.is_bullet_ready():
 			var bullet = bullet_scene.instantiate()
-			
 			add_child(bullet)
 			enemy.construct_bullet(bullet)
 			bullet.show()
-			
 			active_bullets.append(bullet)
 
 func handle_player():
-	if $player.is_killed():
-		remove_child($player)
+	if $Player.is_killed():
+		remove_child($Player)
 		game_over = true
-
-func construct_astar_configuration():
-	for h in h_tile_count:
-		for w in w_tile_count:
-			pass
+		return
+	
+	var health_blocks = int(($Hud.HEALTH_BLOCKS * $Player.health) / $Player.MAX_HEALTH)
+	$Hud.set_visible_blocks(health_blocks)
 
 func init_level_matrix():
 	for h in h_tile_count:
@@ -100,7 +94,7 @@ func init_level_matrix():
 func _process(delta):
 	if game_over: return
 	
-	var v = $player.velocity 
+	var v = $Player.velocity 
 	handle_input(v)
 	handle_bullets()
 	handle_enemies()
@@ -114,6 +108,8 @@ func _ready():
 	w_tile_count 	= SCREEN_SIZE.x / TILE_SIZE
 	h_tile_count	= SCREEN_SIZE.y / TILE_SIZE
 	
+	enemy_ai.set_screen_size(SCREEN_SIZE)
+	
 	var box_scene: 		PackedScene = preload("res://scenes/box.tscn")
 	var floor_scene: 	PackedScene = preload("res://scenes/floor_tile.tscn")
 	var enemy_scene:	PackedScene = preload("res://scenes/enemy.tscn")
@@ -121,6 +117,6 @@ func _ready():
 	init_level_matrix()
 	construct_floor_tiles(floor_scene)
 	construct_boxes_into_matrix()
+	fix_possible_player_trap() # fix the case that the level is split from the random boxes
 	construct_boxes_tiles(box_scene)
 	construct_enemies(enemy_scene)
-	construct_astar_configuration()
