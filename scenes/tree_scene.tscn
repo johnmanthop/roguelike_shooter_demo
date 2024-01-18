@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://bsoq3yli0kfey"]
+
+[ext_resource type="Texture2D" uid="uid://dg7q5drjw7w47" path="res://game_assets/tiles/tree_tile.png" id="1_gfsc7"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_npi2p"]
+size = Vector2(16, 16)
+
+[node name="TreeScene" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("1_gfsc7")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+visible = false
+modulate = Color(0.603922, 0, 0, 1)
+top_level = true
+z_index = 4
+shape = SubResource("RectangleShape2D_npi2p")
+debug_color = Color(0, 0.615686, 0.615686, 0)

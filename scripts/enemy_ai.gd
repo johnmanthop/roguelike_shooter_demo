@@ -2,12 +2,10 @@ class_name EnemyAI extends Node
 
 const TILE_SIZE:				int = 16
 var SCREEN_SIZE:				Vector2
-var walk_duration:				int			= 60
+var walk_duration:				int			= 120
 var interval_between_bullets: 	int 		= 120
 var enemy_scene:				PackedScene = preload("res://scenes/enemy.tscn")
 
-func distance(p1: Vector2, p2: Vector2):
-	return sqrt((p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y))
 
 func get_random_direction():
 	var d = randi() % 4
@@ -19,6 +17,7 @@ func get_random_direction():
 func get_random_position(level_matrix: Array):
 	var w_tile_count: int = SCREEN_SIZE.x / TILE_SIZE
 	var h_tile_count: int = SCREEN_SIZE.y / TILE_SIZE
+	
 	var position = Vector2(randi() % w_tile_count, randi() % h_tile_count)
 	while level_matrix[position.y][position.x] != 0:
 		position = Vector2(randi() % w_tile_count, randi() % h_tile_count)
@@ -38,25 +37,28 @@ func init_enemy_bots(no_of_enemies: int, level_matrix: Array):
 	return enemies
 
 func set_navigation_setting(enemy_bot, target_position):
-	var distance_to_target = distance(enemy_bot.position, target_position)
+	var distance_to_target = enemy_bot.position.distance_to(target_position)
 	if distance_to_target >= 50:
 		enemy_bot.navigation_setting = "random"
 	else:
 		enemy_bot.navigation_setting = "targeted"    
 
+func set_random_direction(enemy_bot):
+	var d = get_random_direction()
+	enemy_bot.velocity = d * enemy_bot.speed
+	enemy_bot.animate_to_direction(d)
+	enemy_bot.walk_timer = 0
+
 func move_bot(enemy_bot, target_position):
 	if enemy_bot.navigation_setting == "random":
 		if enemy_bot.walk_timer == walk_duration:
-			var d = get_random_direction()
-			enemy_bot.velocity = d * enemy_bot.speed
-			enemy_bot.animate_to_direction(d)
-			enemy_bot.walk_timer = 0
+			set_random_direction(enemy_bot)
 		else:
 			enemy_bot.walk_timer += 1
 			enemy_bot.move_and_slide()
 	else:
 		# see vector algebra to understand this
-		var direction_to_target = target_position - enemy_bot.position
+		var direction_to_target = enemy_bot.position.direction_to(target_position)
 		enemy_bot.animate_to_direction(direction_to_target)
 
 func handle_bot_shooting(enemy_bot):

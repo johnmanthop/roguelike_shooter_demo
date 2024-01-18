@@ -57,6 +57,7 @@ func _ready():
 func _process(delta):
 	if health <= 0:
 		killed = true
+		return
 	
 	self.velocity = calculate_normalized_velocity() * speed
 	

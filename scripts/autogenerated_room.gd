@@ -13,6 +13,12 @@ var game_over:			bool = false
 var level_matrix:		Array # 2d level description array
 var half_tile_offset	= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 var enemy_ai
+var player
+var has_exited_entry:	bool
+var start_point:		Vector2
+
+func set_player(p):
+	player = p
 
 func construct_floor_tiles(floor_scene: PackedScene):
 	for i in level_matrix.size():
@@ -51,7 +57,7 @@ func handle_input(v: Vector2):
 		var bullet = bullet_scene.instantiate()
 		
 		add_child(bullet)
-		$Player.construct_bullet(bullet)
+		player.construct_bullet(bullet)
 		bullet.show()
 		
 		active_bullets.append(bullet)
@@ -64,7 +70,7 @@ func handle_bullets():
 
 func handle_enemies():
 	for enemy in active_enemies:
-		enemy_ai.handle_bot(enemy, $Player.position)
+		enemy_ai.handle_bot(enemy, player.position)
 		
 		if enemy.is_bullet_ready():
 			var bullet = bullet_scene.instantiate()
@@ -74,13 +80,9 @@ func handle_enemies():
 			active_bullets.append(bullet)
 
 func handle_player():
-	if $Player.is_killed():
-		remove_child($Player)
-		game_over = true
-		return
-	
-	var health_blocks = int(($Hud.HEALTH_BLOCKS * $Player.health) / $Player.MAX_HEALTH)
-	$Hud.set_visible_blocks(health_blocks)
+	if player.position.distance_to(start_point) > 50:
+		has_exited_entry = true
+	game_over = player.is_killed()
 
 func init_level_matrix():
 	for h in h_tile_count:
@@ -91,22 +93,38 @@ func init_level_matrix():
 			level_matrix[h].append([])
 			level_matrix[h][w] = 0
 
-func _process(delta):
+func handle_hud():
+	var health_blocks = int(($Hud.HEALTH_BLOCKS * player.health) / player.MAX_HEALTH)
+	$Hud.set_visible_blocks(health_blocks)
+
+func is_player_at_entrance():
+	if !has_exited_entry: return false
+	else: return (player.position / TILE_SIZE).distance_to(start_point) < 1.5
+
+func is_player_at_exit(): return false
+
+func get_starting_position():
+	return half_tile_offset
+
+func tick():
 	if game_over: return
 	
-	var v = $Player.velocity 
+	var v = player.velocity 
 	handle_input(v)
 	handle_bullets()
 	handle_enemies()
 	handle_player()
+	handle_hud()
 
 func _ready():
-	half_tile_offset = Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
-	enemy_ai 		= EnemyAI.new()
-	bullet_scene 	= preload("res://scenes/bullet.tscn")
-	SCREEN_SIZE 	= get_viewport_rect().size
-	w_tile_count 	= SCREEN_SIZE.x / TILE_SIZE
-	h_tile_count	= SCREEN_SIZE.y / TILE_SIZE
+	half_tile_offset 	= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
+	start_point			= Vector2.ZERO
+	has_exited_entry	= false
+	enemy_ai 			= EnemyAI.new()
+	bullet_scene 		= preload("res://scenes/bullet.tscn")
+	SCREEN_SIZE 		= get_viewport_rect().size
+	w_tile_count 		= SCREEN_SIZE.x / TILE_SIZE
+	h_tile_count		= SCREEN_SIZE.y / TILE_SIZE
 	
 	enemy_ai.set_screen_size(SCREEN_SIZE)
 	
