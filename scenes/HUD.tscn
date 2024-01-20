@@ -1,11 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://dkk2u4bv8kjox"]
+[gd_scene load_steps=2 format=3 uid="uid://dkk2u4bv8kjox"]
 
 [ext_resource type="Script" path="res://scripts/HUD_controller.gd" id="1_sdsj4"]
-[ext_resource type="Texture2D" uid="uid://ci33no8bjoste" path="res://game_assets/hud/hud_life_container.png" id="2_iqd05"]
 
 [node name="Hud" type="Node2D"]
 script = ExtResource("1_sdsj4")
-
-[node name="HealthBarContainer" type="Sprite2D" parent="."]
-texture_filter = 1
-texture = ExtResource("2_iqd05")

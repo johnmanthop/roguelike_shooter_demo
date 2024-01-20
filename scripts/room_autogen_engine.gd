@@ -11,7 +11,7 @@ var preset_tilesets = [
 ]
 
 func random_tile_construction() -> Array:
-	var construct: Array	
+	var construct = []
 	var random_tileset = preset_tilesets[randi() % preset_tilesets.size()]
 	
 	for random_point in random_tileset:
