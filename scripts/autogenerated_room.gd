@@ -14,8 +14,7 @@ enum TILE
 	BOX_T
 }
 
-const PROX_ZONE:		float = 0.95
-const OUTOF_ENTRY_ZONE: float = PROX_ZONE + 0.5
+const PROX_ZONE:		float = 2
 var NO_OF_ENEMIES: 		int = 8
 var NO_OF_BOXES: 		int = 20
 var SCREEN_SIZE: 		Vector2
@@ -30,8 +29,6 @@ var level_matrix:		Array # 2d level description array
 var half_tile_offset	= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 var enemy_ai
 var player
-var has_exited_left_entry:	bool
-var has_exited_right_entry:	bool
 var entry_point_left:		Vector2
 var entry_point_right:		Vector2
 
@@ -120,10 +117,6 @@ func handle_enemies():
 			active_bullets.append(bullet)
 
 func handle_player():
-	if !has_exited_left_entry:  
-		has_exited_left_entry = player.position.distance_to(entry_point_left * TILE_SIZE) > OUTOF_ENTRY_ZONE
-	if !has_exited_right_entry: 
-		has_exited_right_entry = player.position.distance_to(entry_point_right * TILE_SIZE) > OUTOF_ENTRY_ZONE
 	game_over = player.is_killed()
 
 func init_level_matrix():
@@ -158,21 +151,14 @@ func init_level_matrix():
 	level_matrix[level_matrix.size() - 1][level_matrix[0].size() - 1] = TILE.FLOOR_T_BC3
 
 func is_player_at_left_entry():
-	if !has_exited_left_entry: return false
-	else: return player.position.distance_to(entry_point_left * TILE_SIZE + half_tile_offset) <= PROX_ZONE
+	return player.position.distance_to(entry_point_left * TILE_SIZE + half_tile_offset) <= PROX_ZONE
 
 func is_player_at_right_entry():
-	if !has_exited_right_entry: return false
-	else: return player.position.distance_to(entry_point_right * TILE_SIZE + half_tile_offset) <= PROX_ZONE
-
+	return player.position.distance_to(entry_point_right * TILE_SIZE + half_tile_offset) <= PROX_ZONE
 
 func get_starting_position(left: bool):
 	if left: return entry_point_left * TILE_SIZE
 	else:	 return entry_point_right * TILE_SIZE
-
-func reset():
-	has_exited_left_entry = false
-	has_exited_right_entry = false
 
 func tick():
 	if game_over: return
@@ -185,8 +171,6 @@ func tick():
 
 func _ready():
 	half_tile_offset 		= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
-	has_exited_left_entry	= false
-	has_exited_right_entry	= false
 	enemy_ai 				= EnemyAI.new()
 	bullet_scene 			= preload("res://scenes/bullet.tscn")
 	SCREEN_SIZE 			= get_viewport_rect().size

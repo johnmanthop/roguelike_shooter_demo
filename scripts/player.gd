@@ -30,6 +30,9 @@ func handle_animations(v: Vector2):
 	else:	
 		$AnimatedSprite2D.stop()
 
+func get_animation():
+	return $AnimatedSprite2D.animation
+
 func construct_bullet(bullet: Sprite2D):
 	$GunSound.play()
 	bullet.position = position
