@@ -32,7 +32,7 @@ var player
 var entry_point_left:		Vector2
 var entry_point_right:		Vector2
 
-func set_player(p):
+func set_player_pointer(p):
 	player = p
 
 func construct_floor_tiles():
@@ -64,7 +64,8 @@ func construct_floor_tiles():
 			add_child(floor_tile)
 
 func fix_possible_player_trap():
-	for j in level_matrix[0].size(): level_matrix[0][j] = TILE.FLOOR_T_B3
+	for j in level_matrix[0].size(): 
+		level_matrix[0][j] = TILE.FLOOR_T_B3
 	for i in level_matrix.size(): 
 		level_matrix[i][0] = TILE.FLOOR_T_B1
 		level_matrix[i][level_matrix[0].size() - 1] = TILE.FLOOR_T_B2
@@ -160,7 +161,7 @@ func get_starting_position(left: bool):
 	if left: return entry_point_left * TILE_SIZE
 	else:	 return entry_point_right * TILE_SIZE
 
-func tick():
+func _process(delta):
 	if game_over: return
 	
 	var v = player.velocity 
