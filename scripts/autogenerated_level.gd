@@ -1,9 +1,10 @@
 extends Node2D
 
+const PROX:					float = 12
 const TILE_SIZE:			int = 16
 var SCREEN_SIZE:			Vector2
-const W_LEVEL_SIZE:			int = 17
-const H_LEVEL_SIZE:			int = 11
+const W_LEVEL_SIZE:			int = 32
+const H_LEVEL_SIZE:			int = 32
 const NO_OF_ROOMS:		int = 4
 var half_tile_offset:		Vector2
 var level_matrix:			Array
@@ -12,7 +13,7 @@ var h_tile_count:			int
 var player_starting_point: 	Vector2
 var enemy_room_positions: 	Array
 var player
-var active_room_position:	Vector2
+var has_left_entry:			Array
 
 enum TILE
 {
@@ -48,7 +49,11 @@ func construct_enemy_rooms_in_matrix():
 			random_pos = get_random_pos_global()
 		
 		enemy_room_positions.append(random_pos)
+		has_left_entry.append(false)
 		level_matrix[random_pos.y][random_pos.x] = TILE.ROOM_ENTRANCE_T
+
+func get_camera_position():
+	return $Camera.get_screen_center_position()
 
 func find_path(a: Vector2, b: Vector2) -> Array:
 	var path 				= []
@@ -126,30 +131,50 @@ func convert_matrix_to_tilemap():
 				road_tile.position += half_tile_offset
 				add_child(road_tile)
 
-func handle_player_transfer():
-	active_room_position = Vector2(-1, -1)
+func get_activated_entrance():
+	var room_id = 0
 	for room_position in enemy_room_positions:
-		if (player.position).distance_to(room_position * TILE_SIZE + half_tile_offset) < 12:
-			active_room_position = room_position
-
-func get_active_enemy_room():
-	return active_room_position
+		if has_left_entry[room_id] and player.position.distance_to(room_position * TILE_SIZE + half_tile_offset) <= PROX:
+			return [true, "enemy_room", room_id]
+		room_id += 1
+			
+	return [false]
 
 func set_player_pointer(p):
 	player = p
 
-func _process(delta):
-	handle_player_transfer()
+func handle_camera():
+	$Camera.position = player.position
+	
+func init_camera():
+	$Camera.make_current()
+	$Camera.set_limit(SIDE_LEFT, 0)
+	$Camera.set_limit(SIDE_TOP, 0)
+	$Camera.set_limit(SIDE_RIGHT, W_LEVEL_SIZE * TILE_SIZE)
+	$Camera.set_limit(SIDE_BOTTOM, H_LEVEL_SIZE * TILE_SIZE)
+	
+func handle_player():
+	for room_id in  enemy_room_positions.size():
+		if player.position.distance_to(enemy_room_positions[room_id] * TILE_SIZE + half_tile_offset) > PROX + 2:
+			has_left_entry[room_id] = true
 
+func reset():
+	for i in has_left_entry.size():
+		has_left_entry[i] = false
+			
+func _process(delta):
+	handle_camera()
+	handle_player()
+	
 func _ready():
 	SCREEN_SIZE 		= get_viewport_rect().size
 	half_tile_offset 	= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 	w_tile_count 		= SCREEN_SIZE.x / TILE_SIZE
 	h_tile_count		= SCREEN_SIZE.y / TILE_SIZE
-	active_room_position = Vector2(-1, -1)
-
+		
 	init_level_matrix()
 	construct_starting_point_in_matrix()
 	construct_enemy_rooms_in_matrix()
 	construct_roads_in_matrix()
 	convert_matrix_to_tilemap()
+	init_camera()

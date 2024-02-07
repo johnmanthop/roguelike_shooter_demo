@@ -66,11 +66,9 @@ func _process(delta):
 	
 	handle_animations(velocity)
 	move_and_slide()
-	position = position.clamp(Vector2(TILE_SIZE / 2, TILE_SIZE / 2), SCREEN_SIZE - Vector2(TILE_SIZE / 2, TILE_SIZE / 2))
 	
 func hit_with_bullet(bullet: Sprite2D):
 	if bullet.source == "enemy":
 		$HitSound.play()
 		health -= 10
-		print(health)
 		

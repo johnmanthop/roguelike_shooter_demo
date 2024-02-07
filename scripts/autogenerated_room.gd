@@ -11,10 +11,11 @@ enum TILE
 	FLOOR_T_BC2,
 	FLOOR_T_BC3,
 	FLOOR_T_BC4,
-	BOX_T
+	BOX_T,
+	ENTRANCE_T
 }
 
-const PROX_ZONE:		float = 2
+const PROX:				float = 12
 var NO_OF_ENEMIES: 		int = 8
 var NO_OF_BOXES: 		int = 20
 var SCREEN_SIZE: 		Vector2
@@ -29,8 +30,8 @@ var level_matrix:		Array # 2d level description array
 var half_tile_offset	= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 var enemy_ai
 var player
-var entry_point_left:		Vector2
-var entry_point_right:		Vector2
+var entry_point:		Vector2
+var has_left_entry:		bool
 
 func set_player_pointer(p):
 	player = p
@@ -57,6 +58,8 @@ func construct_floor_tiles():
 				floor_tile.texture = load("res://game_assets/tiles/floor_bc3_rock_tile.png")
 			elif level_matrix[i][j] == TILE.FLOOR_T_BC4:
 				floor_tile.texture = load("res://game_assets/tiles/floor_bc4_rock_tile.png")
+			elif level_matrix[i][j] == TILE.ENTRANCE_T:
+				floor_tile.texture = load("res://game_assets/tiles/entrance_tile.png")
 			
 			floor_tile.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			floor_tile.position = Vector2(j, i) * TILE_SIZE
@@ -74,7 +77,8 @@ func construct_boxes_into_matrix():
 	var level_autogen = LevelAutogen.new()
 	var points = level_autogen.generate_tiles(w_tile_count, h_tile_count, NO_OF_BOXES)
 	for point in points:
-		level_matrix[point.y][point.x] = TILE.BOX_T
+		if level_matrix[point.y][point.x] != TILE.ENTRANCE_T:
+			level_matrix[point.y][point.x] = TILE.BOX_T
 
 func construct_boxes_tiles(box_scene: PackedScene):
 	for h in h_tile_count:
@@ -119,7 +123,10 @@ func handle_enemies():
 
 func handle_player():
 	game_over = player.is_killed()
-
+	player.position = player.position.clamp(Vector2(TILE_SIZE / 2, TILE_SIZE / 2), SCREEN_SIZE - Vector2(TILE_SIZE / 2, TILE_SIZE / 2))
+	if player.position.distance_to(entry_point * TILE_SIZE + half_tile_offset) > PROX + 2:
+		has_left_entry = true
+		
 func init_level_matrix():
 	for h in h_tile_count:
 		level_matrix.append([])
@@ -129,6 +136,11 @@ func init_level_matrix():
 			level_matrix[h].append([])
 			level_matrix[h][w] = TILE.FLOOR_T # lay all the basic floor blocks
 	
+	# lay the entrance tile
+	entry_point = Vector2(level_matrix[0].size() / 2, level_matrix.size() / 2)
+	level_matrix[entry_point.y][entry_point.x] = TILE.ENTRANCE_T
+	for i in entry_point.x:
+		level_matrix[entry_point.y][i] = TILE.FLOOR_T
 	# lay the left/right/up/bottom tiles
 	for i in level_matrix.size():
 		level_matrix[i][0] = TILE.FLOOR_T_B1
@@ -137,29 +149,37 @@ func init_level_matrix():
 	for j in level_matrix[0].size():
 		level_matrix[0][j] = TILE.FLOOR_T_B3
 		level_matrix[level_matrix.size() - 1][j] = TILE.FLOOR_T_B4
-	
-	# lay the entry/exit tiles
-	level_matrix[int(h_tile_count / 2)][0] 		= TILE.FLOOR_T
-	level_matrix[int(h_tile_count / 2)][level_matrix[0].size() - 1] 	= TILE.FLOOR_T
-	
-	entry_point_left  = Vector2(0, int(h_tile_count / 2))
-	entry_point_right = Vector2(level_matrix[0].size() - 1, int(h_tile_count / 2))
-	
+		
 	# lay the border / corner tiles
 	level_matrix[0][0] 							= TILE.FLOOR_T_BC1
 	level_matrix[0][level_matrix[0].size() - 1] = TILE.FLOOR_T_BC2
 	level_matrix[level_matrix.size() - 1][0] 	= TILE.FLOOR_T_BC4
 	level_matrix[level_matrix.size() - 1][level_matrix[0].size() - 1] = TILE.FLOOR_T_BC3
 
-func is_player_at_left_entry():
-	return player.position.distance_to(entry_point_left * TILE_SIZE + half_tile_offset) <= PROX_ZONE
+func handle_camera():
+	$Camera.position = player.position
+	
+func init_camera():
+	$Camera.make_current()
+	$Camera.set_limit(SIDE_LEFT, 0)
+	$Camera.set_limit(SIDE_TOP, 0)
+	$Camera.set_limit(SIDE_RIGHT, w_tile_count * TILE_SIZE)
+	$Camera.set_limit(SIDE_BOTTOM, h_tile_count * TILE_SIZE)
 
-func is_player_at_right_entry():
-	return player.position.distance_to(entry_point_right * TILE_SIZE + half_tile_offset) <= PROX_ZONE
+func get_camera_position():
+	return $Camera.get_screen_center_position()
 
-func get_starting_position(left: bool):
-	if left: return entry_point_left * TILE_SIZE
-	else:	 return entry_point_right * TILE_SIZE
+func get_starting_position():
+	return entry_point * TILE_SIZE + half_tile_offset
+
+func get_activated_entrance():
+	if has_left_entry and player.position.distance_to(entry_point * TILE_SIZE + half_tile_offset) <= PROX:
+		return [true, "free_roam_level"]
+	else:
+		return [false]
+
+func reset():
+	has_left_entry = false
 
 func _process(delta):
 	if game_over: return
@@ -169,6 +189,7 @@ func _process(delta):
 	handle_bullets()
 	handle_enemies()
 	handle_player()
+	handle_camera()
 
 func _ready():
 	half_tile_offset 		= Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
@@ -177,7 +198,7 @@ func _ready():
 	SCREEN_SIZE 			= get_viewport_rect().size
 	w_tile_count 			= SCREEN_SIZE.x / TILE_SIZE
 	h_tile_count			= SCREEN_SIZE.y / TILE_SIZE
-	
+	has_left_entry			= false
 	enemy_ai.set_screen_size(SCREEN_SIZE)
 	
 	var box_scene: 		PackedScene = preload("res://scenes/box.tscn")
@@ -189,3 +210,4 @@ func _ready():
 	fix_possible_player_trap() # fix the case that the level is split from the random boxes
 	construct_boxes_tiles(box_scene)
 	construct_enemies(enemy_scene)
+	init_camera()
